@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"reflect"
 
+	"gopkg.in/yaml.v2"
+
 	"github.com/gogap/env_strings"
 	"github.com/hoisie/redis"
 )
@@ -33,7 +35,7 @@ type syncData struct {
 }
 
 func main() {
-	config, err := getRedisConfig()
+	config, err := getRedisConfig("json")
 	if err != nil {
 		log.Println(err)
 		os.Exit(1)
@@ -57,7 +59,7 @@ func main() {
 	return
 }
 
-func getRedisConfig() (config redisConfig, err error) {
+func getRedisConfig(configtype string) (config redisConfig, err error) {
 	path := os.Getenv(env_strings.ENV_STRINGS_CONFIG_KEY)
 	if path == "" {
 		path = env_strings.ENV_STRINGS_CONF
@@ -73,10 +75,18 @@ func getRedisConfig() (config redisConfig, err error) {
 		return
 	}
 	var storageConfig env_strings.EnvStringConfig
-	err = json.Unmarshal(data, &storageConfig)
-	if err != nil {
-		return
+	if configtype == "json" {
+		err = json.Unmarshal(data, &storageConfig)
+		if err != nil {
+			return
+		}
+	} else if configtype == "yaml" {
+		err = yaml.Unmarshal(data, &storageConfig)
+		if err != nil {
+			return
+		}
 	}
+
 	for _, storage := range storageConfig.Storages {
 		if storage.Engine == env_strings.STORAGE_REDIS {
 			if v, exist := storage.Options["address"]; !exist {

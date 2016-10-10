@@ -16,6 +16,8 @@ import (
 	"sync"
 	"text/template"
 	"time"
+
+	"gopkg.in/yaml.v2"
 )
 
 var (
@@ -76,6 +78,8 @@ func basicFuncs() template.FuncMap {
 	m["split"] = strings.Split
 	m["json"] = UnmarshalJsonObject
 	m["jsonArray"] = UnmarshalJsonArray
+	m["yaml"] = UnmarshalYamlObject
+	m["yamlArray"] = UnmarshalYamlArray
 	m["dir"] = path.Dir
 	m["getenv"] = os.Getenv
 	m["join"] = strings.Join
@@ -142,6 +146,18 @@ func UnmarshalJsonObject(data string) (map[string]interface{}, error) {
 func UnmarshalJsonArray(data string) ([]interface{}, error) {
 	var ret []interface{}
 	err := json.Unmarshal([]byte(data), &ret)
+	return ret, err
+}
+
+func UnmarshalYamlObject(data string) (map[string]interface{}, error) {
+	var ret map[string]interface{}
+	err := yaml.Unmarshal([]byte(data), &ret)
+	return ret, err
+}
+
+func UnmarshalYamlArray(data string) ([]interface{}, error) {
+	var ret []interface{}
+	err := yaml.Unmarshal([]byte(data), &ret)
 	return ret, err
 }
 

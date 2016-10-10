@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -25,12 +27,12 @@ const (
 )
 
 type EnvStringConfig struct {
-	Storages []StorageConfig `json:"storages"`
+	Storages []StorageConfig `json:"storages" yaml:"storages"`
 }
 
 type StorageConfig struct {
-	Engine  string                 `json:"engine"`
-	Options map[string]interface{} `json:"options"`
+	Engine  string                 `json:"engine" yaml:"engine"`
+	Options map[string]interface{} `json:"options" yaml:"options"`
 }
 
 type option func(envStrings *EnvStrings)
@@ -41,8 +43,8 @@ type EnvStrings struct {
 	tmplFuncs *TemplateFuncs
 
 	configFile string
-
-	envConfig EnvStringConfig
+	configType string
+	envConfig  EnvStringConfig
 }
 
 func FuncMap(name string, function interface{}) option {
@@ -57,7 +59,7 @@ func EnvStringsConfig(fileName string) option {
 	}
 }
 
-func NewEnvStrings(envName string, envExt string, opts ...option) *EnvStrings {
+func NewEnvStrings(envName string, envExt string, configType string, opts ...option) *EnvStrings {
 	if envName == "" {
 		panic("env_strings: env name could not be empty")
 	}
@@ -66,6 +68,7 @@ func NewEnvStrings(envName string, envExt string, opts ...option) *EnvStrings {
 		envName:    envName,
 		envExt:     envExt,
 		configFile: ENV_STRINGS_CONF,
+		configType: configType,
 		tmplFuncs:  NewTemplateFuncs(),
 	}
 
@@ -74,7 +77,6 @@ func NewEnvStrings(envName string, envExt string, opts ...option) *EnvStrings {
 			opt(envStrings)
 		}
 	}
-
 	envStringsConf := os.Getenv(ENV_STRINGS_CONFIG_KEY)
 	if envStringsConf != "" {
 		envStrings.configFile = envStringsConf
@@ -130,6 +132,7 @@ func (p *EnvStrings) ExecuteWith(str string, envValues map[string]interface{}) (
 	files := []string{}
 
 	if len(configFiles) > 0 {
+
 		for _, confFile := range configFiles {
 			confFile = strings.TrimSpace(confFile)
 			if confFile == "" {
@@ -176,8 +179,15 @@ func (p *EnvStrings) ExecuteWith(str string, envValues map[string]interface{}) (
 			}
 
 			env := map[string]interface{}{}
-			if err = json.Unmarshal(str, &env); err != nil {
-				return
+			// env := make(map[interface{}]interface{})
+			if p.configType == "json" {
+				if err = json.Unmarshal(str, &env); err != nil {
+					return
+				}
+			} else if p.configType == "yaml" {
+				if err = yaml.Unmarshal(str, &env); err != nil {
+					return
+				}
 			}
 
 			envs[file] = env
@@ -214,7 +224,6 @@ func (p *EnvStrings) ExecuteWith(str string, envValues map[string]interface{}) (
 	}
 
 	var tpl *template.Template
-
 	if tpl, err = template.New("tmpl:" + p.envName).Funcs(p.tmplFuncs.GetFuncMaps(p.envName)).Option("missingkey=error").Parse(str); err != nil {
 		return
 	}
@@ -223,19 +232,17 @@ func (p *EnvStrings) ExecuteWith(str string, envValues map[string]interface{}) (
 	if err = tpl.Execute(&buf, allEnvs); err != nil {
 		return
 	}
-
 	ret = buf.String()
-
 	return
 }
 
-func Execute(str string) (ret string, err error) {
-	envStrings := NewEnvStrings(ENV_STRINGS_KEY, ENV_STRINGS_EXT)
+func Execute(str, configtype string) (ret string, err error) {
+	envStrings := NewEnvStrings(ENV_STRINGS_KEY, ENV_STRINGS_EXT, configtype)
 	return envStrings.Execute(str)
 }
 
-func ExecuteWith(str string, envValues map[string]interface{}) (ret string, err error) {
-	envStrings := NewEnvStrings(ENV_STRINGS_KEY, ENV_STRINGS_EXT)
+func ExecuteWith(str string, envValues map[string]interface{}, configtype string) (ret string, err error) {
+	envStrings := NewEnvStrings(ENV_STRINGS_KEY, ENV_STRINGS_EXT, configtype)
 	return envStrings.ExecuteWith(str, envValues)
 }
 
