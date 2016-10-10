@@ -48,7 +48,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/gogap/env_strings"
+	"github.com/gooops/env_strings"
 )
 
 func main() {
@@ -121,10 +121,10 @@ we should set the config file of `/etc/env_strings.conf` (default path) before u
 #### set data to redis
 
 ```bash
-> redis-cli -n 1 set name gogap
+> redis-cli -n 1 set name gooops
 OK
 > redis-cli -n 1 get name
-gogap
+gooops
 > redis-cli -n 1 set key field value
 OK
 > redis-cli -n 1 hget key field
@@ -146,7 +146,7 @@ value
 
 ```bash
 {
-	"name":"gogap"
+	"name":"gooops"
 }
 ```
 
@@ -154,7 +154,7 @@ if key not exist, and we want get a default value
 
 ```json
 {
-	"name":"{{redis_get "noexistkey" "gogap"}}"
+	"name":"{{redis_get "noexistkey" "gooops"}}"
 }
 ```
 
@@ -162,7 +162,7 @@ if key not exist, and we want get a default value
 
 ```bash
 {
-	"name":"gogap"
+	"name":"gooops"
 }
 ```
 
@@ -189,7 +189,7 @@ if key or filed not exist, and we want get a default value
 
 ```json
 {
-	"name":"{{redis_hget "key2" "filed" "gogap"}}"
+	"name":"{{redis_hget "key2" "filed" "gooops"}}"
 }
 ```
 
@@ -197,6 +197,6 @@ if key or filed not exist, and we want get a default value
 
 ```bash
 {
-	"name":"gogap"
+	"name":"gooops"
 }
 ```

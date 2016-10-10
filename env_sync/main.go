@@ -12,7 +12,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/gogap/env_strings"
+	"github.com/gooops/env_strings"
 	"github.com/hoisie/redis"
 )
 
